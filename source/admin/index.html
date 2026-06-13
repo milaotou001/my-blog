@@ -60,6 +60,23 @@
   .preview img { max-width: 100%; border-radius: 4px; }
   .preview a { color: #222; }
 
+  /* Fullscreen editor */
+  .fs-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; background: #fff; display: flex; flex-direction: column; }
+  .fs-overlay .fs-toolbar { display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-bottom: 1px solid #eee; flex-shrink: 0; }
+  .fs-overlay .fs-toolbar button { padding: 8px 14px; font-size: 14px; background: #fff; color: #333; border: 1px solid #ddd; border-radius: 6px; white-space: nowrap; }
+  .fs-overlay .fs-toolbar .fs-close { margin-left: auto; background: #222; color: #fff; border: none; padding: 8px 16px; }
+  .fs-overlay .fs-toolbar .fs-tab { font-weight: 600; }
+  .fs-overlay .fs-toolbar .fs-tab.on { color: #222; border-bottom: 2px solid #222; border-radius: 0; background: none; }
+  .fs-overlay textarea { flex: 1; width: 100%; border: none; border-radius: 0; padding: 16px; font-size: 16px; line-height: 1.8; resize: none; outline: none; font-family: inherit; }
+  .fs-overlay .fs-preview { flex: 1; overflow-y: auto; padding: 16px; line-height: 1.8; font-size: 16px; word-break: break-word; }
+  .fs-overlay .fs-preview h1,.fs-overlay .fs-preview h2,.fs-overlay .fs-preview h3 { margin-top: 1.2em; margin-bottom: 0.5em; }
+  .fs-overlay .fs-preview p { margin: 0.6em 0; }
+  .fs-overlay .fs-preview ul,.fs-overlay .fs-preview ol { padding-left: 1.5em; }
+  .fs-overlay .fs-preview code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+  .fs-overlay .fs-preview pre { background: #f5f5f5; padding: 12px; border-radius: 8px; overflow-x: auto; }
+  .fs-overlay .fs-preview pre code { background: none; padding: 0; }
+  .fs-overlay .fs-preview blockquote { border-left: 3px solid #ccc; padding-left: 12px; color: #666; margin: 0.8em 0; }
+
   /* Sections */
   .section { display: none; }
   .section.active { display: block; }
@@ -132,6 +149,7 @@
       <button onclick="wrap('[','](url)','链接')" title="链接">链接</button>
       <button onclick="wrap('`','`','代码')" title="代码">&lt;/&gt;</button>
       <button onclick="insertAtCursor('\n---\n')" title="分割线">分割</button>
+      <button onclick="toggleFullscreen()" title="全屏编辑" style="margin-left:auto;background:#f0f0f0;">&#x26F6;</button>
     </div>
     <textarea id="content" placeholder="在这里写正文..." style="border-radius:0 0 8px 8px;"></textarea>
   </div>
@@ -182,6 +200,94 @@ function switchTab(tab) {
     document.getElementById("preview").innerHTML = md ? marked.parse(md, { breaks: true }) : '<p style="color:#999">正文为空</p>';
   }
 }
+
+// ====== Fullscreen Editor ======
+function toggleFullscreen() {
+  var existing = document.getElementById("fsOverlay");
+  if (existing) { existing.remove(); return; }
+
+  var ta = document.getElementById("content");
+  var md = ta.value;
+
+  var overlay = document.createElement("div");
+  overlay.id = "fsOverlay";
+  overlay.className = "fs-overlay";
+
+  // top bar: toolbar + edit/preview tabs + close
+  var top = document.createElement("div");
+  top.className = "fs-toolbar";
+  top.innerHTML = '<button onclick="fsWrap(\'**\',\'**\',\'加粗\')">B</button>'
+    + '<button onclick="fsWrap(\'*\',\'*\',\'斜体\')"><i>I</i></button>'
+    + '<button onclick="fsWrap(\'## \',\'\',\'小标题\')">H2</button>'
+    + '<button onclick="fsWrap(\'### \',\'\',\'更小标题\')">H3</button>'
+    + '<button onclick="fsInsert(\'\\n- \')">列表</button>'
+    + '<button onclick="fsInsert(\'\\n1. \')">编号</button>'
+    + '<button onclick="fsWrap(\'> \',\'\',\'引用\')">引用</button>'
+    + '<button onclick="fsWrap(\'[\',\'](url)\',\'链接\')">链接</button>'
+    + '<button onclick="fsWrap(\'`\',\'`\',\'代码\')">&lt;/&gt;</button>'
+    + '<button onclick="fsInsert(\'\\n---\\n\')">分割</button>'
+    + '<button class="fs-tab on" id="fsTabEdit" onclick="fsSwitch(\'edit\')">编辑</button>'
+    + '<button class="fs-tab" id="fsTabPreview" onclick="fsSwitch(\'preview\')">预览</button>'
+    + '<button class="fs-close" onclick="toggleFullscreen()">关闭</button>';
+
+  // editor textarea
+  var ta2 = document.createElement("textarea");
+  ta2.id = "fsTextarea";
+  ta2.value = md;
+
+  // preview div
+  var pv = document.createElement("div");
+  pv.id = "fsPreview";
+  pv.className = "fs-preview";
+  pv.style.display = "none";
+  pv.innerHTML = md ? marked.parse(md, { breaks: true }) : '<p style="color:#999">正文为空</p>';
+
+  overlay.appendChild(top);
+  overlay.appendChild(ta2);
+  overlay.appendChild(pv);
+  document.body.appendChild(overlay);
+
+  // helper functions on window so onclick can reach them
+  window.fsWrap = function(before, after, placeholder) {
+    var t = document.getElementById("fsTextarea");
+    var start = t.selectionStart, end = t.selectionEnd;
+    var selected = t.value.substring(start, end) || placeholder;
+    t.value = t.value.substring(0, start) + before + selected + after + t.value.substring(end);
+    t.selectionStart = start + before.length;
+    t.selectionEnd = start + before.length + selected.length;
+    t.focus();
+  };
+  window.fsInsert = function(text) {
+    var t = document.getElementById("fsTextarea");
+    var start = t.selectionStart, end = t.selectionEnd;
+    t.value = t.value.substring(0, start) + text + t.value.substring(end);
+    t.selectionStart = t.selectionEnd = start + text.length;
+    t.focus();
+  };
+  window.fsSwitch = function(tab) {
+    document.getElementById("fsTabEdit").className = "fs-tab" + (tab === "edit" ? " on" : "");
+    document.getElementById("fsTabPreview").className = "fs-tab" + (tab === "preview" ? " on" : "");
+    document.getElementById("fsTextarea").style.display = tab === "edit" ? "" : "none";
+    document.getElementById("fsPreview").style.display = tab === "preview" ? "" : "none";
+    if (tab === "preview") {
+      var m = document.getElementById("fsTextarea").value;
+      document.getElementById("fsPreview").innerHTML = m ? marked.parse(m, { breaks: true }) : '<p style="color:#999">正文为空</p>';
+    }
+  };
+
+  ta2.focus();
+  ta2.setSelectionRange(ta.selectionStart, ta.selectionEnd);
+}
+
+// Before saving/publishing, sync fullscreen content back to original textarea
+var origPublish = publish;
+publish = function() {
+  var fs = document.getElementById("fsOverlay");
+  if (fs) {
+    document.getElementById("content").value = document.getElementById("fsTextarea").value;
+  }
+  origPublish();
+};
 
 // ====== Auth ======
 function api(body) {
