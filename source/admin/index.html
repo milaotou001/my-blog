@@ -205,6 +205,9 @@ function switchTab(tab) {
 function toggleFullscreen() {
   var existing = document.getElementById("fsOverlay");
   if (existing) {
+    // Sync fullscreen content back to original textarea
+    var fsTa = document.getElementById("fsTextarea");
+    if (fsTa) document.getElementById("content").value = fsTa.value;
     existing.remove();
     document.body.style.overflow = "";
     document.body.style.background = "";
