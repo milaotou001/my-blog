@@ -55,7 +55,7 @@ export default async function handler(req, res) {
   const slugDate = (date || new Date().toISOString().split("T")[0]).replace(/-/g, "");
   const titleSlug = title
     .replace(/\s+/g, "-")
-    .replace(/[^a-zA-Z0-9一-鿿㐀-䶿-]/g, "")
+    .replace(/[^a-zA-Z0-9\p{Script=Han}-]/gu, "")
     .slice(0, 30)
     .toLowerCase()
     || "post";
