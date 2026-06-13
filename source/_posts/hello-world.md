@@ -1,5 +1,5 @@
 ---
-title: Hello World — 欢迎来到我的博客
+title: 欢迎来到我的博客
 date: 2026-06-13
 categories: 随笔
 tags:
