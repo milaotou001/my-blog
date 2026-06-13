@@ -26,7 +26,7 @@ creative_commons:
   license: by-nc-sa
   size: small
   sidebar: false
-  post: true
+  post: false
   language: deed.zh
 
 # Open graph
