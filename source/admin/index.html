@@ -10,7 +10,7 @@
   h1 { font-size: 20px; margin-bottom: 16px; text-align: center; }
   label { display: block; font-size: 13px; color: #666; margin-bottom: 4px; margin-top: 12px; }
   input, textarea { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; font-family: inherit; background: #fff; }
-  textarea { min-height: 300px; line-height: 1.6; resize: vertical; }
+  textarea { min-height: 300px; line-height: 1.6; resize: vertical; font-size: 15px; }
   button { padding: 12px 20px; background: #222; color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
   button:active { background: #000; }
   button:disabled { background: #999; }
@@ -34,12 +34,32 @@
   .tag { background: #e0e0e0; padding: 4px 10px; border-radius: 12px; font-size: 13px; display: flex; align-items: center; gap: 4px; }
   .tag .del { cursor: pointer; font-weight: bold; color: #999; }
 
+  /* Tabs for editor/preview */
+  .tabs { display: flex; gap: 0; margin-top: 12px; border-bottom: 2px solid #ddd; }
+  .tabs button { flex: 1; padding: 10px; background: none; color: #888; border: none; border-radius: 8px 8px 0 0; font-size: 14px; }
+  .tabs button.active { color: #222; border-bottom: 2px solid #222; margin-bottom: -2px; background: none; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Preview */
+  .preview { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 16px; min-height: 300px; line-height: 1.8; font-size: 15px; word-break: break-word; }
+  .preview h1,.preview h2,.preview h3 { margin-top: 1.2em; margin-bottom: 0.5em; }
+  .preview h1 { font-size: 1.5em; }
+  .preview h2 { font-size: 1.3em; }
+  .preview p { margin: 0.6em 0; }
+  .preview ul,.preview ol { padding-left: 1.5em; margin: 0.5em 0; }
+  .preview code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+  .preview pre { background: #f5f5f5; padding: 12px; border-radius: 8px; overflow-x: auto; }
+  .preview pre code { background: none; padding: 0; }
+  .preview blockquote { border-left: 3px solid #ccc; padding-left: 12px; color: #666; margin: 0.8em 0; }
+  .preview img { max-width: 100%; border-radius: 4px; }
+  .preview a { color: #222; }
+
   /* Sections */
   .section { display: none; }
   .section.active { display: block; }
   .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
   .top-bar h1 { margin-bottom: 0; }
-
   .back-link { text-align: center; margin-top: 12px; }
   .back-link a { color: #999; font-size: 13px; }
 </style>
@@ -89,19 +109,43 @@
   <div id="tags" class="tags"></div>
 
   <label>正文 <span class="hint">（Markdown 格式）</span></label>
-  <textarea id="content" placeholder="在这里写正文..."></textarea>
+
+  <div class="tabs">
+    <button id="tabEdit" class="active" onclick="switchTab('edit')">编辑</button>
+    <button id="tabPreview" onclick="switchTab('preview')">预览</button>
+  </div>
+
+  <div id="editPane" class="tab-content active">
+    <textarea id="content" placeholder="在这里写正文..." style="border-radius:0 0 8px 8px; margin-top:-1px"></textarea>
+  </div>
+  <div id="previewPane" class="tab-content">
+    <div id="preview" class="preview" style="border-radius:0 0 8px 8px; margin-top:-1px">输入正文后点击预览</div>
+  </div>
 
   <button id="publishBtn" class="btn-full" onclick="publish()">发布</button>
   <button class="btn-full btn-outline" onclick="backToList()" style="margin-top:8px">← 返回列表</button>
   <div id="msg" class="msg"></div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
 var tags = [];
 var token = "";
 var isEdit = false;
 
 document.getElementById("date").value = new Date().toISOString().split("T")[0];
+
+// ====== Markdown Preview ======
+function switchTab(tab) {
+  document.getElementById("tabEdit").classList.toggle("active", tab === "edit");
+  document.getElementById("tabPreview").classList.toggle("active", tab === "preview");
+  document.getElementById("editPane").classList.toggle("active", tab === "edit");
+  document.getElementById("previewPane").classList.toggle("active", tab === "preview");
+  if (tab === "preview") {
+    var md = document.getElementById("content").value;
+    document.getElementById("preview").innerHTML = md ? marked.parse(md) : '<p style="color:#999">正文为空</p>';
+  }
+}
 
 // ====== Auth ======
 function api(body) {
@@ -164,6 +208,7 @@ function editPost(name) {
     tags = Array.isArray(d.tags) ? d.tags : (d.tags ? [d.tags] : []);
     renderTags();
     document.getElementById("publishBtn").textContent = "保存修改";
+    switchTab("edit");
     showSection("editor");
   });
 }
@@ -181,6 +226,7 @@ function newPost() {
   renderTags();
   document.getElementById("publishBtn").textContent = "发布";
   document.getElementById("msg").className = "msg";
+  switchTab("edit");
   showSection("editor");
 }
 
@@ -228,9 +274,7 @@ function publish() {
     btn.textContent = isEdit ? "保存修改" : "发布";
     if (r.ok) {
       showMsg(isEdit ? "修改成功！" : "发布成功！稍后刷新博客即可看到。", "success");
-      if (isEdit) {
-        document.getElementById("editSha").value = r.data.sha || "";
-      } else {
+      if (!isEdit) {
         document.getElementById("title").value = "";
         document.getElementById("content").value = "";
         tags = []; renderTags();
