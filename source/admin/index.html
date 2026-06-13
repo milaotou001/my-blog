@@ -143,6 +143,7 @@
       <button onclick="wrap('*','*','斜体')" title="斜体"><i>I</i></button>
       <button onclick="wrap('## ','','小标题')" title="小标题">H2</button>
       <button onclick="wrap('### ','','更小标题')" title="更小标题">H3</button>
+      <button onclick="wrap('#### ','','子标题')" title="子标题">H4</button>
       <button onclick="insertAtCursor('\n- ')" title="列表">列表</button>
       <button onclick="insertAtCursor('\n1. ')" title="编号">编号</button>
       <button onclick="wrap('> ','','引用')" title="引用">引用</button>
@@ -283,6 +284,7 @@ function toggleFullscreen() {
     + '<button onclick="fsWrap(\'*\',\'*\',\'斜体\')"><i>I</i></button>'
     + '<button onclick="fsWrap(\'## \',\'\',\'小标题\')">H2</button>'
     + '<button onclick="fsWrap(\'### \',\'\',\'更小标题\')">H3</button>'
+    + '<button onclick="fsWrap(\'#### \',\'\',\'子标题\')">H4</button>'
     + '<button onclick="fsInsert(\'\\n- \')">列表</button>'
     + '<button onclick="fsInsert(\'\\n1. \')">编号</button>'
     + '<button onclick="fsWrap(\'> \',\'\',\'引用\')">引用</button>'
