@@ -14,7 +14,16 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: "密码错误" });
   }
 
-  const body = req.body || {};
+  // Parse body manually to preserve UTF-8 encoding
+  let body = {};
+  try {
+    const chunks = [];
+    for await (const chunk of req) chunks.push(chunk);
+    const raw = Buffer.concat(chunks).toString("utf-8");
+    body = JSON.parse(raw);
+  } catch (e) {
+    body = req.body || {};
+  }
   const action = body.action || "publish";
 
   const token = process.env.GITHUB_PAT;
@@ -82,7 +91,7 @@ export default async function handler(req, res) {
         headers,
         body: JSON.stringify({
           message: `Update: ${body.title}`,
-          content: Buffer.from(md).toString("base64"),
+          content: Buffer.from(md, "utf-8").toString("base64"),
           sha: body.sha,
           branch: "master",
         }),
@@ -105,7 +114,7 @@ export default async function handler(req, res) {
       headers,
       body: JSON.stringify({
         message: `Add post: ${body.title}`,
-        content: Buffer.from(md).toString("base64"),
+        content: Buffer.from(md, "utf-8").toString("base64"),
         branch: "master",
       }),
     });
