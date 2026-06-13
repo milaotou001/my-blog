@@ -1,0 +1,304 @@
+# ===============================================================
+# NexT Theme Configuration — Mist Scheme
+# Reference: https://theme-next.js.org/docs/getting-started/configuration
+# ===============================================================
+
+# ---------------------------------------------------------------
+# Scheme Settings
+# ---------------------------------------------------------------
+scheme: Mist
+
+# Dark Mode (disabled — keep the clean light theme like zhouyifan.net)
+darkmode: false
+
+# ---------------------------------------------------------------
+# Site Information
+# ---------------------------------------------------------------
+
+favicon:
+  small: /images/favicon-16x16-next.png
+  medium: /images/favicon-32x32-next.png
+  apple_touch_icon: /images/apple-touch-icon-next.png
+  safari_pinned_tab: /images/logo.svg
+
+# Creative Commons License in post footer
+creative_commons:
+  license: by-nc-sa
+  size: small
+  sidebar: false
+  post: true
+  language: deed.zh
+
+# Open graph
+open_graph:
+  enable: true
+  options:
+
+# ---------------------------------------------------------------
+# Menu Settings
+# ---------------------------------------------------------------
+menu:
+  home: / || fa fa-home
+  about: /about/ || fa fa-user
+  tags: /tags/ || fa fa-tags
+  categories: /categories/ || fa fa-th
+  archives: /archives/ || fa fa-archive
+
+menu_settings:
+  icons: true
+  badges: false
+
+# ---------------------------------------------------------------
+# Sidebar Settings
+# ---------------------------------------------------------------
+sidebar:
+  position: left
+  width_expanded: 320
+  display: post
+  padding: 18
+
+# Avatar (replace with your own image)
+avatar:
+  url: #/images/avatar.jpg
+  rounded: false
+  rotated: false
+
+# Show post / category / tag count in sidebar
+site_state: true
+
+# Social Links
+social:
+  GitHub: https://github.com/ || fab fa-github
+  RSS: /atom.xml || fa fa-rss
+
+social_icons:
+  enable: true
+  icons_only: false
+  transition: false
+
+# Blogroll links
+links_settings:
+  icon: fa fa-globe
+  layout: block
+
+links:
+
+# Table of Contents in Sidebar
+toc:
+  enable: true
+  number: true
+  wrap: false
+  expand_all: false
+  max_depth: 6
+
+# ---------------------------------------------------------------
+# Footer Settings
+# ---------------------------------------------------------------
+footer:
+  since: 2026
+  icon:
+    name: fa fa-heart
+    animated: false
+    color: "#ff0000"
+  copyright:
+  powered: true
+
+# ---------------------------------------------------------------
+# Post Settings
+# ---------------------------------------------------------------
+
+# Use `description` in front-matter as excerpt
+excerpt_description: true
+
+# Read more button
+read_more_btn: true
+
+# Post meta
+post_meta:
+  item_text: true
+  created_at: true
+  updated_at:
+    enable: true
+    another_day: true
+  categories: true
+
+# Word count / reading time (requires hexo-word-counter)
+symbols_count_time:
+  separated_meta: true
+  item_text_total: false
+
+# Tag icon
+tag_icon: false
+
+# Reward / donate
+reward_settings:
+  enable: false
+  animation: false
+
+reward:
+
+# Follow me
+follow_me:
+  RSS: /atom.xml || fa fa-rss
+
+# Related posts
+related_posts:
+  enable: false
+  icon: fa fa-signs-post
+
+# Post edit link
+post_edit:
+  enable: false
+  url: https://github.com/user/repo/tree/main/source/
+
+# Previous / next post navigation
+post_navigation: left
+
+# ---------------------------------------------------------------
+# Custom Page Settings
+# ---------------------------------------------------------------
+
+# TagCloud for tags page
+tagcloud:
+  min: 12
+  max: 30
+  amount: 200
+  orderby: name
+  order: 1
+
+# ---------------------------------------------------------------
+# Misc Theme Settings
+# ---------------------------------------------------------------
+
+# Text alignment
+text_align:
+  desktop: justify
+  mobile: justify
+
+# Mobile layout
+mobile_layout_economy: false
+
+# Browser header panel color
+theme_color:
+  light: "#222"
+  dark: "#222"
+
+# Code block
+codeblock:
+  theme:
+    light: default
+    dark: stackoverflow-dark
+  prism:
+    light: prism
+    dark: prism-dark
+  copy_button:
+    enable: false
+    style:
+  fold:
+    enable: false
+    height: 500
+  language: false
+
+# Back to top
+back2top:
+  enable: true
+  sidebar: false
+  scrollpercent: true
+
+# Reading progress bar
+reading_progress:
+  enable: true
+  start_at: left
+  position: top
+  reversed: false
+  color: "#37c6c0"
+  height: 3px
+
+# Bookmark
+bookmark:
+  enable: false
+  color: "#222"
+  save: auto
+
+# GitHub banner
+github_banner:
+  enable: false
+  permalink: https://github.com/
+
+# ---------------------------------------------------------------
+# External Libraries
+# ---------------------------------------------------------------
+pjax: false
+fancybox: false
+mediumzoom: false
+lazyload: false
+pangu: false
+
+# Quicklink (prefetch links in viewport)
+quicklink:
+  enable: false
+  home: false
+  archive: false
+  delay: true
+  timeout: 3000
+  priority: true
+
+# ---------------------------------------------------------------
+# Animation Settings
+# ---------------------------------------------------------------
+
+motion:
+  enable: true
+  async: false
+  duration: 200
+  transition:
+    menu_item: fadeInDown
+    post_block: fadeIn
+    post_header: fadeInDown
+    post_body: fadeInDown
+    coll_header: fadeInLeft
+    sidebar: fadeInUp
+
+# Pace progress bar on page load
+pace:
+  enable: false
+  color: blue
+  theme: minimal
+
+# Canvas ribbon
+canvas_ribbon:
+  enable: false
+  size: 300
+  alpha: 0.6
+  zIndex: -1
+
+# ---------------------------------------------------------------
+# Comments (disabled by default)
+# ---------------------------------------------------------------
+comments:
+  style: tabs
+  active:
+  storage: true
+  lazyload: false
+  nav:
+
+# ---------------------------------------------------------------
+# Search — Local Search
+# ---------------------------------------------------------------
+local_search:
+  enable: true
+  top_n_per_article: 1
+  unescape: false
+  preload: false
+
+# ---------------------------------------------------------------
+# CDN / Vendors
+# ---------------------------------------------------------------
+vendors:
+  internal: local
+  plugins: cdnjs
+
+# Assets
+css: css
+js: js
+images: images
