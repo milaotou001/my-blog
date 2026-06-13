@@ -186,6 +186,25 @@ function insertListMarker(marker) {
     var nl = val.indexOf('\n', pos);
     pos = nl === -1 ? val.length : nl;
   }
+  // detect previous line to decide indent for sub-items
+  var prevLine = '';
+  if (pos > 0) {
+    var lineStart = val.lastIndexOf('\n', pos - 1);
+    prevLine = val.substring(lineStart + 1, pos);
+  }
+  var isNumbered = /^\d+\.\s/.test(prevLine);
+  var isBullet = /^\s*-\s/.test(prevLine);
+  var isIndentedBullet = /^\s+-\s/.test(prevLine);
+
+  // "列表" button: indent if inside a numbered item or bullet list
+  if (marker === '- ') {
+    if (isNumbered || isBullet) marker = '  - ';
+  }
+  // "编号" button: if after indented bullets, go back to list start
+  if (/^\d+\.\s/.test(marker) && isIndentedBullet) {
+    marker = '1. ';
+  }
+
   var ins = (pos === 0 || val[pos - 1] === '\n' ? '' : '\n') + marker;
   ta.value = val.substring(0, pos) + ins + val.substring(pos);
   ta.selectionStart = ta.selectionEnd = pos + ins.length;
