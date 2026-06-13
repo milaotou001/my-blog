@@ -310,7 +310,9 @@ function publish() {
     btn.textContent = isEdit ? "保存修改" : "发布";
     if (r.ok) {
       showMsg(isEdit ? "修改成功！" : "发布成功！稍后刷新博客即可看到。", "success");
-      if (!isEdit) {
+      if (isEdit) {
+        document.getElementById("editSha").value = r.data.sha || "";
+      } else {
         document.getElementById("title").value = "";
         document.getElementById("content").value = "";
         tags = []; renderTags();
