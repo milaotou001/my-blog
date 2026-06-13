@@ -89,7 +89,7 @@ theme: next
 # RSS Feed
 # Docs: https://github.com/hexojs/hexo-generator-feed
 feed:
-  enable: true
+  enable: false
   type: atom
   path: atom.xml
   limit: 20

@@ -69,7 +69,6 @@ site_state: true
 # Social Links
 social:
   GitHub: https://github.com/milaotou001 || fab fa-github
-  RSS: /atom.xml || fa fa-rss
 
 social_icons:
   enable: true
@@ -139,7 +138,6 @@ reward:
 
 # Follow me
 follow_me:
-  RSS: /atom.xml || fa fa-rss
 
 # Related posts
 related_posts:
