@@ -126,8 +126,8 @@
       <button onclick="wrap('*','*','斜体')" title="斜体"><i>I</i></button>
       <button onclick="wrap('## ','','小标题')" title="小标题">H2</button>
       <button onclick="wrap('### ','','更小标题')" title="更小标题">H3</button>
-      <button onclick="insertListMarker('- ')" title="列表">列表</button>
-      <button onclick="insertListMarker('1. ')" title="编号">编号</button>
+      <button onclick="insertAtCursor('\n- ')" title="列表">列表</button>
+      <button onclick="insertAtCursor('\n1. ')" title="编号">编号</button>
       <button onclick="wrap('> ','','引用')" title="引用">引用</button>
       <button onclick="wrap('[','](url)','链接')" title="链接">链接</button>
       <button onclick="wrap('`','`','代码')" title="代码">&lt;/&gt;</button>
@@ -168,46 +168,6 @@ function wrap(before, after, placeholder) {
   ta.value = ta.value.substring(0, start) + before + selected + after + ta.value.substring(end);
   ta.selectionStart = start + before.length;
   ta.selectionEnd = start + before.length + selected.length;
-  ta.focus();
-}
-
-// Smart list insert: strips trailing blank lines so lists stay together
-function insertListMarker(marker) {
-  var ta = document.getElementById("content");
-  var val = ta.value;
-  var pos = ta.selectionStart;
-  // eat trailing blank lines so consecutive items aren't split
-  while (pos >= 2 && val.substring(pos - 2, pos) === '\n\n') {
-    val = val.substring(0, pos - 1) + val.substring(pos);
-    pos--;
-  }
-  // if cursor is mid-line, go to end of line first
-  if (pos < val.length && val[pos] !== '\n') {
-    var nl = val.indexOf('\n', pos);
-    pos = nl === -1 ? val.length : nl;
-  }
-  // detect previous line to decide indent for sub-items
-  var prevLine = '';
-  if (pos > 0) {
-    var lineStart = val.lastIndexOf('\n', pos - 1);
-    prevLine = val.substring(lineStart + 1, pos);
-  }
-  var isNumbered = /^\d+\.\s/.test(prevLine);
-  var isBullet = /^\s*-\s/.test(prevLine);
-  var isIndentedBullet = /^\s+-\s/.test(prevLine);
-
-  // "列表" button: indent if inside a numbered item or bullet list
-  if (marker === '- ') {
-    if (isNumbered || isBullet) marker = '  - ';
-  }
-  // "编号" button: if after indented bullets, go back to list start
-  if (/^\d+\.\s/.test(marker) && isIndentedBullet) {
-    marker = '1. ';
-  }
-
-  var ins = (pos === 0 || val[pos - 1] === '\n' ? '' : '\n') + marker;
-  ta.value = val.substring(0, pos) + ins + val.substring(pos);
-  ta.selectionStart = ta.selectionEnd = pos + ins.length;
   ta.focus();
 }
 
