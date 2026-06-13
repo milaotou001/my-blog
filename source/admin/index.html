@@ -208,6 +208,8 @@ function toggleFullscreen() {
     existing.remove();
     document.body.style.overflow = "";
     document.body.style.background = "";
+    document.documentElement.style.overflow = "";
+    document.documentElement.style.background = "";
     document.removeEventListener("keydown", window._fsKey);
     if (window.visualViewport) {
       window.visualViewport.removeEventListener("resize", window._fsLayout);
@@ -219,6 +221,8 @@ function toggleFullscreen() {
 
   document.body.style.overflow = "hidden";
   document.body.style.background = "#fff";
+  document.documentElement.style.overflow = "hidden";
+  document.documentElement.style.background = "#fff";
 
   // Measure toolbar and position textarea below it
   window._fsLayout = function() {
@@ -329,6 +333,8 @@ publish = function() {
     fs.remove();
     document.body.style.overflow = "";
     document.body.style.background = "";
+    document.documentElement.style.overflow = "";
+    document.documentElement.style.background = "";
     document.removeEventListener("keydown", window._fsKey);
     if (window.visualViewport) {
       window.visualViewport.removeEventListener("resize", window._fsLayout);
