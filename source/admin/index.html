@@ -494,6 +494,7 @@ function publish() {
       showMsg(isEdit ? "修改成功！" : "发布成功！稍后刷新博客即可看到。", "success");
       if (isEdit) {
         document.getElementById("editSha").value = r.data.sha || "";
+        if (r.data.name) document.getElementById("editName").value = r.data.name;
       } else {
         document.getElementById("title").value = "";
         document.getElementById("content").value = "";

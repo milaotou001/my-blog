@@ -86,6 +86,32 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "标题和正文不能为空" });
       }
       const md = buildMarkdown(body);
+      const newName = makeFilename(body.title, body.date);
+      const oldName = body.name;
+
+      // If title changed, rename file (create new + delete old)
+      if (newName !== oldName) {
+        const newPath = `source/_posts/${newName}`;
+        // Create new file
+        const cr = await fetch(`https://api.github.com/repos/${repo}/contents/${newPath}`, {
+          method: "PUT",
+          headers,
+          body: JSON.stringify({
+            message: `Rename: ${body.title}`,
+            content: Buffer.from(md, "utf-8").toString("base64"),
+            branch: "master",
+          }),
+        });
+        const cdata = await cr.json();
+        if (!cr.ok) return res.status(cr.status).json({ error: cdata.message });
+        // Delete old file
+        await fetch(`${base}/${encodeURIComponent(oldName)}`, {
+          method: "DELETE",
+          headers,
+          body: JSON.stringify({ message: `Rename: ${body.title}`, sha: body.sha, branch: "master" }),
+        });
+        return res.json({ ok: true, sha: cdata.content.sha, name: newName });
+      }
 
       async function tryUpdate(sha) {
         const r = await fetch(`${base}/${encodeURIComponent(body.name)}`, {
