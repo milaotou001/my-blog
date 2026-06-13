@@ -51,17 +51,15 @@ export default async function handler(req, res) {
     .filter((line) => line !== "")
     .join("\n");
 
-  // Filename from title + date
-  const dateStr = (date || new Date().toISOString().split("T")[0]).replace(
-    /-/g,
-    "/"
-  );
-  const safeTitle = title
+  // Filename: date prefix + title slug
+  const slugDate = (date || new Date().toISOString().split("T")[0]).replace(/-/g, "");
+  const titleSlug = title
     .replace(/\s+/g, "-")
-    .replace(/[^\w一-鿿-]/g, "")
-    .slice(0, 40)
-    .toLowerCase();
-  const filename = `${safeTitle || "post"}.md`;
+    .replace(/[^a-zA-Z0-9一-鿿㐀-䶿-]/g, "")
+    .slice(0, 30)
+    .toLowerCase()
+    || "post";
+  const filename = `${slugDate}-${titleSlug}.md`;
   const path = `source/_posts/${filename}`;
 
   // Commit to GitHub
