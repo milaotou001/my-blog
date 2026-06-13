@@ -288,6 +288,16 @@ function toggleFullscreen() {
   overlay.appendChild(pv);
   document.body.appendChild(overlay);
 
+  // Swipe right to close
+  var touchStartX = 0;
+  overlay.addEventListener("touchstart", function(e) {
+    touchStartX = e.touches[0].clientX;
+  }, { passive: true });
+  overlay.addEventListener("touchend", function(e) {
+    var dx = e.changedTouches[0].clientX - touchStartX;
+    if (dx > 80) toggleFullscreen();
+  });
+
   // Esc or back gesture to close
   window._fsKey = function(e) { if (e.key === "Escape") toggleFullscreen(); };
   document.addEventListener("keydown", window._fsKey);
