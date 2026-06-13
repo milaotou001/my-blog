@@ -62,7 +62,7 @@
 
   /* Fullscreen editor */
   .fs-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; background: #fff; display: flex; flex-direction: column; }
-  .fs-overlay .fs-toolbar { display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-bottom: 1px solid #eee; flex-shrink: 0; }
+  .fs-overlay .fs-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 8px 10px; border-bottom: 1px solid #eee; flex-shrink: 0; }
   .fs-overlay .fs-toolbar button { padding: 8px 14px; font-size: 14px; background: #fff; color: #333; border: 1px solid #ddd; border-radius: 6px; white-space: nowrap; }
   .fs-overlay .fs-toolbar .fs-close { margin-left: auto; background: #222; color: #fff; border: none; padding: 8px 16px; }
   .fs-overlay .fs-toolbar .fs-tab { font-weight: 600; }
@@ -204,7 +204,11 @@ function switchTab(tab) {
 // ====== Fullscreen Editor ======
 function toggleFullscreen() {
   var existing = document.getElementById("fsOverlay");
-  if (existing) { existing.remove(); return; }
+  if (existing) {
+    existing.remove();
+    document.removeEventListener("keydown", window._fsKey);
+    return;
+  }
 
   var ta = document.getElementById("content");
   var md = ta.value;
@@ -246,6 +250,10 @@ function toggleFullscreen() {
   overlay.appendChild(ta2);
   overlay.appendChild(pv);
   document.body.appendChild(overlay);
+
+  // Esc or back gesture to close
+  window._fsKey = function(e) { if (e.key === "Escape") toggleFullscreen(); };
+  document.addEventListener("keydown", window._fsKey);
 
   // helper functions on window so onclick can reach them
   window.fsWrap = function(before, after, placeholder) {
