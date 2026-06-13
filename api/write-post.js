@@ -53,13 +53,13 @@ export default async function handler(req, res) {
 
   // Filename: date prefix + title slug
   const slugDate = (date || new Date().toISOString().split("T")[0]).replace(/-/g, "");
-  const titleSlug = title
+  const safeTitle = title
     .replace(/\s+/g, "-")
-    .replace(/[^a-zA-Z0-9\p{Script=Han}-]/gu, "")
+    .replace(/[^a-z0-9\-_一-鿿]/gi, "")
     .slice(0, 30)
     .toLowerCase()
-    || "post";
-  const filename = `${slugDate}-${titleSlug}.md`;
+    || Date.now().toString(36);
+  const filename = `${slugDate}-${safeTitle}.md`;
   const path = `source/_posts/${filename}`;
 
   // Commit to GitHub
