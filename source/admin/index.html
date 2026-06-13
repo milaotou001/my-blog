@@ -284,34 +284,6 @@ function toggleFullscreen() {
   overlay.appendChild(pv);
   document.body.appendChild(overlay);
 
-  // Swipe right to dismiss with animation
-  var swipeX = 0, swipeStart = 0, swiping = false;
-  overlay.addEventListener("touchstart", function(e) {
-    swipeStart = e.touches[0].clientX;
-    swipeX = 0;
-    swiping = false;
-  }, { passive: true });
-  overlay.addEventListener("touchmove", function(e) {
-    var dx = e.touches[0].clientX - swipeStart;
-    if (dx > 10 || swiping) {
-      swiping = true;
-      swipeX = Math.max(0, dx);
-      overlay.style.transition = "none";
-      overlay.style.transform = "translateX(" + swipeX + "px)";
-    }
-  }, { passive: true });
-  overlay.addEventListener("touchend", function() {
-    overlay.style.transition = "transform 0.25s ease";
-    if (swipeX > 120) {
-      overlay.style.transform = "translateX(100%)";
-      setTimeout(function() { toggleFullscreen(); }, 260);
-    } else {
-      overlay.style.transform = "translateX(0)";
-      swipeX = 0;
-      swiping = false;
-    }
-  });
-
   // Esc or back gesture to close
   window._fsKey = function(e) { if (e.key === "Escape") toggleFullscreen(); };
   document.addEventListener("keydown", window._fsKey);
