@@ -41,6 +41,11 @@
   .tab-content { display: none; }
   .tab-content.active { display: block; }
 
+  /* Toolbar */
+  .toolbar { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px; background: #fafafa; border: 1px solid #ddd; border-top: none; }
+  .toolbar button { padding: 6px 10px; background: #fff; color: #333; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; font-weight: normal; white-space: nowrap; }
+  .toolbar button:active { background: #eee; }
+
   /* Preview */
   .preview { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 16px; min-height: 300px; line-height: 1.8; font-size: 15px; word-break: break-word; }
   .preview h1,.preview h2,.preview h3 { margin-top: 1.2em; margin-bottom: 0.5em; }
@@ -116,7 +121,19 @@
   </div>
 
   <div id="editPane" class="tab-content active">
-    <textarea id="content" placeholder="在这里写正文..." style="border-radius:0 0 8px 8px; margin-top:-1px"></textarea>
+    <div class="toolbar">
+      <button onclick="wrap('**','**','加粗')" title="加粗">B</button>
+      <button onclick="wrap('*','*','斜体')" title="斜体"><i>I</i></button>
+      <button onclick="wrap('## ','','小标题')" title="小标题">H2</button>
+      <button onclick="wrap('### ','','更小标题')" title="更小标题">H3</button>
+      <button onclick="insertAtCursor('\n- ')" title="列表">列表</button>
+      <button onclick="insertAtCursor('\n1. ')" title="编号">编号</button>
+      <button onclick="wrap('> ','','引用')" title="引用">引用</button>
+      <button onclick="wrap('[','](url)','链接')" title="链接">链接</button>
+      <button onclick="wrap('`','`','代码')" title="代码">&lt;/&gt;</button>
+      <button onclick="insertAtCursor('\n---\n')" title="分割线">分割</button>
+    </div>
+    <textarea id="content" placeholder="在这里写正文..." style="border-radius:0 0 8px 8px;"></textarea>
   </div>
   <div id="previewPane" class="tab-content">
     <div id="preview" class="preview" style="border-radius:0 0 8px 8px; margin-top:-1px">输入正文后点击预览</div>
@@ -134,6 +151,25 @@ var token = "";
 var isEdit = false;
 
 document.getElementById("date").value = new Date().toISOString().split("T")[0];
+
+// ====== Toolbar ======
+function insertAtCursor(text) {
+  var ta = document.getElementById("content");
+  var start = ta.selectionStart, end = ta.selectionEnd;
+  ta.value = ta.value.substring(0, start) + text + ta.value.substring(end);
+  ta.selectionStart = ta.selectionEnd = start + text.length;
+  ta.focus();
+}
+
+function wrap(before, after, placeholder) {
+  var ta = document.getElementById("content");
+  var start = ta.selectionStart, end = ta.selectionEnd;
+  var selected = ta.value.substring(start, end) || placeholder;
+  ta.value = ta.value.substring(0, start) + before + selected + after + ta.value.substring(end);
+  ta.selectionStart = start + before.length;
+  ta.selectionEnd = start + before.length + selected.length;
+  ta.focus();
+}
 
 // ====== Markdown Preview ======
 function switchTab(tab) {
