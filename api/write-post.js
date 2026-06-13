@@ -34,6 +34,13 @@ export default async function handler(req, res) {
     Accept: "application/vnd.github.v3+json",
     "Content-Type": "application/json",
   };
+  const deployHook = process.env.VERCEL_DEPLOY_HOOK;
+
+  function triggerDeploy() {
+    if (deployHook) {
+      fetch(deployHook, { method: "POST" }).catch(() => {});
+    }
+  }
 
   try {
     if (action === "check") {
@@ -110,6 +117,7 @@ export default async function handler(req, res) {
           headers,
           body: JSON.stringify({ message: `Rename: ${body.title}`, sha: body.sha, branch: "master" }),
         });
+        triggerDeploy();
         return res.json({ ok: true, sha: cdata.content.sha, name: newName });
       }
 
@@ -138,6 +146,7 @@ export default async function handler(req, res) {
       }
 
       if (!result.ok) return res.status(result.status).json({ error: result.data.message });
+      triggerDeploy();
       return res.json({ ok: true, sha: result.data.content.sha });
     }
 
@@ -160,6 +169,7 @@ export default async function handler(req, res) {
     });
     const data = await r.json();
     if (!r.ok) return res.status(r.status).json({ error: data.message });
+    triggerDeploy();
     return res.json({ ok: true, path });
   } catch (e) {
     return res.status(500).json({ error: "服务器错误: " + e.message });
