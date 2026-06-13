@@ -3,45 +3,75 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>写文章</title>
+<title>博客管理</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; color: #333; padding: 16px; }
   h1 { font-size: 20px; margin-bottom: 16px; text-align: center; }
   label { display: block; font-size: 13px; color: #666; margin-bottom: 4px; margin-top: 12px; }
-  input, textarea, select { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; font-family: inherit; background: #fff; }
+  input, textarea { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; font-family: inherit; background: #fff; }
   textarea { min-height: 300px; line-height: 1.6; resize: vertical; }
-  button { width: 100%; padding: 14px; background: #222; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; margin-top: 16px; cursor: pointer; }
+  button { padding: 12px 20px; background: #222; color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
   button:active { background: #000; }
   button:disabled { background: #999; }
+  .btn-full { width: 100%; padding: 14px; font-size: 16px; margin-top: 12px; }
+  .btn-outline { background: #fff; color: #222; border: 1px solid #ddd; }
   .msg { text-align: center; padding: 8px; margin-top: 8px; border-radius: 8px; font-size: 14px; display: none; }
   .msg.success { display: block; background: #e8f5e9; color: #2e7d32; }
   .msg.error { display: block; background: #ffebee; color: #c62828; }
   .hint { font-size: 12px; color: #999; margin-top: 2px; }
+
+  /* Post list */
+  .post-item { background: #fff; padding: 14px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .post-item .name { font-weight: 600; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .post-item button { padding: 8px 14px; font-size: 13px; white-space: nowrap; }
+
+  /* Tags */
   .tag-row { display: flex; gap: 8px; margin-top: 4px; }
   .tag-row input { flex: 1; }
-  .tag-row button { width: auto; padding: 10px 16px; margin: 0; font-size: 14px; }
+  .tag-row button { width: auto; padding: 10px 16px; margin: 0; font-size: 14px; background: #666; }
   .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
   .tag { background: #e0e0e0; padding: 4px 10px; border-radius: 12px; font-size: 13px; display: flex; align-items: center; gap: 4px; }
   .tag .del { cursor: pointer; font-weight: bold; color: #999; }
-  #login, #editor { display: none; }
-  #login.active, #editor.active { display: block; }
+
+  /* Sections */
+  .section { display: none; }
+  .section.active { display: block; }
+  .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .top-bar h1 { margin-bottom: 0; }
+
   .back-link { text-align: center; margin-top: 12px; }
   .back-link a { color: #999; font-size: 13px; }
 </style>
 </head>
 <body>
 
-<div id="login" class="active">
+<!-- Login -->
+<div id="login" class="section active">
   <h1>登录编辑器</h1>
   <label>密码</label>
   <input id="pwd" type="password" placeholder="输入密码">
-  <button onclick="login()">登录</button>
+  <button class="btn-full" onclick="login()">登录</button>
   <div id="loginMsg" class="msg"></div>
 </div>
 
-<div id="editor">
-  <h1>写文章</h1>
+<!-- Post List -->
+<div id="list" class="section">
+  <div class="top-bar">
+    <h1>文章列表</h1>
+    <button class="btn-outline" onclick="newPost()">+ 新建</button>
+  </div>
+  <div id="postList"></div>
+  <div id="listMsg" class="msg"></div>
+  <div class="back-link"><a href="/">← 返回博客</a></div>
+</div>
+
+<!-- Editor -->
+<div id="editor" class="section">
+  <h1 id="editorTitle">写文章</h1>
+  <input type="hidden" id="editName">
+  <input type="hidden" id="editSha">
+
   <label>标题</label>
   <input id="title" placeholder="文章标题">
 
@@ -61,61 +91,119 @@
   <label>正文 <span class="hint">（Markdown 格式）</span></label>
   <textarea id="content" placeholder="在这里写正文..."></textarea>
 
-  <button id="publishBtn" onclick="publish()">发布</button>
+  <button id="publishBtn" class="btn-full" onclick="publish()">发布</button>
+  <button class="btn-full btn-outline" onclick="backToList()" style="margin-top:8px">← 返回列表</button>
   <div id="msg" class="msg"></div>
-
-  <div class="back-link"><a href="/">← 返回博客</a></div>
 </div>
 
 <script>
 var tags = [];
 var token = "";
+var isEdit = false;
 
 document.getElementById("date").value = new Date().toISOString().split("T")[0];
+
+// ====== Auth ======
+function api(body) {
+  var tok = token || localStorage.getItem("blog_token") || "";
+  return fetch("/api/write-post", {
+    method: "POST",
+    headers: { "Authorization": "Basic " + tok, "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  }).then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); });
+}
 
 function login() {
   var pwd = document.getElementById("pwd").value;
   if (!pwd) return;
   token = btoa("admin:" + pwd);
-  document.getElementById("loginMsg").className = "msg";
-  document.getElementById("loginMsg").textContent = "验证中...";
-  document.getElementById("loginMsg").style.display = "block";
-
-  fetch("/api/write-post", { method: "POST", headers: { "Authorization": "Basic " + token, "Content-Type": "application/json" }, body: JSON.stringify({ action: "check" }) })
-    .then(function(r) {
-      if (r.ok) {
-        document.getElementById("login").classList.remove("active");
-        document.getElementById("editor").classList.add("active");
-        localStorage.setItem("blog_token", token);
-      } else {
-        document.getElementById("loginMsg").textContent = "密码错误";
-        document.getElementById("loginMsg").className = "msg error";
-      }
-    })
-    .catch(function() {
-      document.getElementById("loginMsg").textContent = "网络错误，请重试";
-      document.getElementById("loginMsg").className = "msg error";
-    });
+  var msg = document.getElementById("loginMsg");
+  msg.textContent = "验证中..."; msg.className = "msg"; msg.style.display = "block";
+  api({ action: "check" }).then(function(r) {
+    if (r.ok) {
+      localStorage.setItem("blog_token", token);
+      showSection("list");
+      loadList();
+    } else {
+      msg.textContent = "密码错误"; msg.className = "msg error";
+    }
+  });
 }
 
+// ====== Post List ======
+function loadList() {
+  api({ action: "list" }).then(function(r) {
+    var el = document.getElementById("postList");
+    if (!r.ok || !Array.isArray(r.data)) {
+      el.innerHTML = '<p style="color:#999;text-align:center;padding:20px">暂无文章</p>';
+      return;
+    }
+    el.innerHTML = r.data.map(function(p) {
+      return '<div class="post-item">'
+        + '<span class="name">' + esc(p.name.replace(/\.md$/, "")) + '</span>'
+        + '<button onclick="editPost(\'' + esc(p.name) + '\')">编辑</button>'
+        + '</div>';
+    }).join("");
+    document.getElementById("listMsg").textContent = "共 " + r.data.length + " 篇文章";
+    document.getElementById("listMsg").className = "msg success";
+  });
+}
+
+function editPost(name) {
+  api({ action: "get", name: name }).then(function(r) {
+    if (!r.ok) { alert("加载失败: " + (r.data.error || "")); return; }
+    var d = r.data;
+    isEdit = true;
+    document.getElementById("editorTitle").textContent = "编辑文章";
+    document.getElementById("editName").value = d.name;
+    document.getElementById("editSha").value = d.sha;
+    document.getElementById("title").value = d.title || "";
+    document.getElementById("date").value = d.date || "";
+    document.getElementById("category").value = d.categories || "";
+    document.getElementById("content").value = d.content || "";
+    tags = Array.isArray(d.tags) ? d.tags : (d.tags ? [d.tags] : []);
+    renderTags();
+    document.getElementById("publishBtn").textContent = "保存修改";
+    showSection("editor");
+  });
+}
+
+function newPost() {
+  isEdit = false;
+  document.getElementById("editorTitle").textContent = "写文章";
+  document.getElementById("editName").value = "";
+  document.getElementById("editSha").value = "";
+  document.getElementById("title").value = "";
+  document.getElementById("date").value = new Date().toISOString().split("T")[0];
+  document.getElementById("category").value = "";
+  document.getElementById("content").value = "";
+  tags = [];
+  renderTags();
+  document.getElementById("publishBtn").textContent = "发布";
+  document.getElementById("msg").className = "msg";
+  showSection("editor");
+}
+
+function backToList() {
+  showSection("list");
+  loadList();
+}
+
+// ====== Editor ======
 function addTag() {
-  var input = document.getElementById("tagInput");
-  var val = input.value.trim();
-  if (val && tags.indexOf(val) === -1) { tags.push(val); renderTags(); }
-  input.value = "";
+  var v = document.getElementById("tagInput").value.trim();
+  if (v && tags.indexOf(v) === -1) { tags.push(v); renderTags(); }
+  document.getElementById("tagInput").value = "";
 }
-
 function removeTag(i) { tags.splice(i, 1); renderTags(); }
-
 function renderTags() {
   document.getElementById("tags").innerHTML = tags.map(function(t, i) {
-    return '<span class="tag">' + t + '<span class="del" onclick="removeTag(' + i + ')">&times;</span></span>';
+    return '<span class="tag">' + esc(t) + '<span class="del" onclick="removeTag(' + i + ')">&times;</span></span>';
   }).join("");
 }
 
 function publish() {
   var btn = document.getElementById("publishBtn");
-  var msg = document.getElementById("msg");
   var title = document.getElementById("title").value.trim();
   var date = document.getElementById("date").value;
   var category = document.getElementById("category").value.trim();
@@ -125,55 +213,59 @@ function publish() {
   if (!content) { showMsg("请填写正文", "error"); return; }
 
   btn.disabled = true;
-  btn.textContent = "发布中...";
-  msg.className = "msg";
+  btn.textContent = isEdit ? "保存中..." : "发布中...";
 
-  var tok = token || localStorage.getItem("blog_token") || "";
+  var payload = { title: title, date: date, categories: category, tags: tags, content: content };
 
-  fetch("/api/write-post", {
-    method: "POST",
-    headers: { "Authorization": "Basic " + tok, "Content-Type": "application/json" },
-    body: JSON.stringify({ title: title, date: date, categories: category, tags: tags, content: content })
-  })
-  .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
-  .then(function(result) {
+  if (isEdit) {
+    payload.action = "update";
+    payload.name = document.getElementById("editName").value;
+    payload.sha = document.getElementById("editSha").value;
+  }
+
+  api(payload).then(function(r) {
     btn.disabled = false;
-    btn.textContent = "发布";
-    if (result.ok) {
-      showMsg("发布成功！稍后刷新博客即可看到新文章。", "success");
-      document.getElementById("title").value = "";
-      document.getElementById("content").value = "";
-      tags = [];
-      renderTags();
+    btn.textContent = isEdit ? "保存修改" : "发布";
+    if (r.ok) {
+      showMsg(isEdit ? "修改成功！" : "发布成功！稍后刷新博客即可看到。", "success");
+      if (isEdit) {
+        document.getElementById("editSha").value = r.data.sha || "";
+      } else {
+        document.getElementById("title").value = "";
+        document.getElementById("content").value = "";
+        tags = []; renderTags();
+      }
     } else {
-      showMsg(result.data.error || "发布失败", "error");
+      showMsg(r.data.error || "操作失败", "error");
     }
-  })
-  .catch(function() {
+  }).catch(function() {
     btn.disabled = false;
-    btn.textContent = "发布";
+    btn.textContent = isEdit ? "保存修改" : "发布";
     showMsg("网络错误，请重试", "error");
   });
 }
 
 function showMsg(text, type) {
-  var msg = document.getElementById("msg");
-  msg.textContent = text;
-  msg.className = "msg " + type;
+  var m = document.getElementById("msg");
+  m.textContent = text; m.className = "msg " + type;
 }
 
-// Auto login if token cached
+// ====== Util ======
+function showSection(name) {
+  ["login","list","editor"].forEach(function(s) {
+    document.getElementById(s).classList.toggle("active", s === name);
+  });
+}
+function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
+
+// ====== Auto login ======
 (function() {
   var saved = localStorage.getItem("blog_token");
   if (saved) {
     token = saved;
-    fetch("/api/write-post", { method: "POST", headers: { "Authorization": "Basic " + saved, "Content-Type": "application/json" }, body: JSON.stringify({ action: "check" }) })
-      .then(function(r) {
-        if (r.ok) {
-          document.getElementById("login").classList.remove("active");
-          document.getElementById("editor").classList.add("active");
-        }
-      });
+    api({ action: "check" }).then(function(r) {
+      if (r.ok) { showSection("list"); loadList(); }
+    });
   }
 })();
 </script>
