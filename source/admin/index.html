@@ -211,6 +211,7 @@ function toggleFullscreen() {
     document.documentElement.style.overflow = "";
     document.documentElement.style.background = "";
     document.removeEventListener("keydown", window._fsKey);
+    document.removeEventListener("touchmove", window._fsBlockScroll);
     if (window.visualViewport) {
       window.visualViewport.removeEventListener("resize", window._fsLayout);
       window.visualViewport.removeEventListener("scroll", window._fsLayout);
@@ -223,6 +224,16 @@ function toggleFullscreen() {
   document.body.style.background = "#fff";
   document.documentElement.style.overflow = "hidden";
   document.documentElement.style.background = "#fff";
+  // Prevent any overscroll/bounce on iOS
+  window._fsBlockScroll = function(e) {
+    var el = e.target;
+    while (el && el !== overlay) {
+      if (el === ta2 || el === pv) return; // allow scroll inside textarea/preview
+      el = el.parentElement;
+    }
+    e.preventDefault();
+  };
+  document.addEventListener("touchmove", window._fsBlockScroll, { passive: false });
 
   // Measure toolbar and position textarea below it
   window._fsLayout = function() {
@@ -336,6 +347,7 @@ publish = function() {
     document.documentElement.style.overflow = "";
     document.documentElement.style.background = "";
     document.removeEventListener("keydown", window._fsKey);
+    document.removeEventListener("touchmove", window._fsBlockScroll);
     if (window.visualViewport) {
       window.visualViewport.removeEventListener("resize", window._fsLayout);
       window.visualViewport.removeEventListener("scroll", window._fsLayout);
