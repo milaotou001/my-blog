@@ -61,14 +61,14 @@
   .preview a { color: #222; }
 
   /* Fullscreen editor */
-  .fs-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; height: 100dvh; z-index: 9999; background: #fff; display: flex; flex-direction: column; overflow: hidden; }
-  .fs-overlay .fs-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 8px 10px; border-bottom: 1px solid #eee; flex-shrink: 0; }
+  .fs-overlay { position: fixed; top: 0; left: 0; width: 100%; z-index: 9999; background: #fff; overflow: hidden; overscroll-behavior: none; }
+  .fs-overlay .fs-toolbar { position: absolute; top: 0; left: 0; right: 0; z-index: 2; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 8px 10px; border-bottom: 1px solid #eee; background: #fff; }
   .fs-overlay .fs-toolbar button { padding: 8px 14px; font-size: 14px; background: #fff; color: #333; border: 1px solid #ddd; border-radius: 6px; white-space: nowrap; }
   .fs-overlay .fs-toolbar .fs-close { margin-left: auto; background: #222; color: #fff; border: none; padding: 8px 16px; }
   .fs-overlay .fs-toolbar .fs-tab { font-weight: 600; }
   .fs-overlay .fs-toolbar .fs-tab.on { color: #222; border-bottom: 2px solid #222; border-radius: 0; background: none; }
-  .fs-overlay textarea { flex: 1; width: 100%; border: none; border-radius: 0; padding: 16px; font-size: 16px; line-height: 1.8; resize: none; outline: none; font-family: inherit; }
-  .fs-overlay .fs-preview { flex: 1; overflow-y: auto; padding: 16px; line-height: 1.8; font-size: 16px; word-break: break-word; }
+  .fs-overlay textarea { position: absolute; left: 0; right: 0; bottom: 0; border: none; border-radius: 0; padding: 16px; font-size: 16px; line-height: 1.8; resize: none; outline: none; font-family: inherit; }
+  .fs-overlay .fs-preview { position: absolute; left: 0; right: 0; bottom: 0; overflow-y: auto; padding: 16px; line-height: 1.8; font-size: 16px; word-break: break-word; }
   .fs-overlay .fs-preview h1,.fs-overlay .fs-preview h2,.fs-overlay .fs-preview h3 { margin-top: 1.2em; margin-bottom: 0.5em; }
   .fs-overlay .fs-preview p { margin: 0.6em 0; }
   .fs-overlay .fs-preview ul,.fs-overlay .fs-preview ol { padding-left: 1.5em; }
@@ -209,29 +209,41 @@ function toggleFullscreen() {
     document.body.style.overflow = "";
     document.removeEventListener("keydown", window._fsKey);
     if (window.visualViewport) {
-      window.visualViewport.removeEventListener("resize", window._fsResize);
-      window.visualViewport.removeEventListener("scroll", window._fsResize);
+      window.visualViewport.removeEventListener("resize", window._fsLayout);
+      window.visualViewport.removeEventListener("scroll", window._fsLayout);
     }
+    window.removeEventListener("resize", window._fsLayout);
     return;
   }
 
   document.body.style.overflow = "hidden";
 
-  // Use visualViewport to keep toolbar visible when keyboard opens
-  window._fsResize = function() {
+  // Measure toolbar and position textarea below it; track visualViewport
+  window._fsLayout = function() {
     var ov = document.getElementById("fsOverlay");
     if (!ov) return;
+    var tb = ov.querySelector(".fs-toolbar");
+    var th = tb ? tb.offsetHeight : 50;
+    var ta = document.getElementById("fsTextarea");
+    var pv = document.getElementById("fsPreview");
+    if (ta) ta.style.top = th + "px";
+    if (pv) pv.style.top = th + "px";
     var vv = window.visualViewport;
     if (vv) {
       ov.style.height = vv.height + "px";
       ov.style.top = vv.offsetTop + "px";
+    } else {
+      ov.style.height = "100dvh";
     }
   };
   if (window.visualViewport) {
-    window.visualViewport.addEventListener("resize", window._fsResize);
-    window.visualViewport.addEventListener("scroll", window._fsResize);
+    window.visualViewport.addEventListener("resize", window._fsLayout);
+    window.visualViewport.addEventListener("scroll", window._fsLayout);
   }
-  window._fsResize();
+  window.addEventListener("resize", window._fsLayout);
+  // Run after layout settles
+  setTimeout(window._fsLayout, 50);
+  setTimeout(window._fsLayout, 300);
 
   var ta = document.getElementById("content");
   var md = ta.value;
@@ -320,9 +332,10 @@ publish = function() {
     document.body.style.overflow = "";
     document.removeEventListener("keydown", window._fsKey);
     if (window.visualViewport) {
-      window.visualViewport.removeEventListener("resize", window._fsResize);
-      window.visualViewport.removeEventListener("scroll", window._fsResize);
+      window.visualViewport.removeEventListener("resize", window._fsLayout);
+      window.visualViewport.removeEventListener("scroll", window._fsLayout);
     }
+    window.removeEventListener("resize", window._fsLayout);
   }
   origPublish();
 };
