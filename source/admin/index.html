@@ -179,7 +179,7 @@ function switchTab(tab) {
   document.getElementById("previewPane").classList.toggle("active", tab === "preview");
   if (tab === "preview") {
     var md = document.getElementById("content").value;
-    document.getElementById("preview").innerHTML = md ? marked.parse(md) : '<p style="color:#999">正文为空</p>';
+    document.getElementById("preview").innerHTML = md ? marked.parse(md, { breaks: true }) : '<p style="color:#999">正文为空</p>';
   }
 }
 
