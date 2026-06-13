@@ -235,7 +235,7 @@ function toggleFullscreen() {
   };
   document.addEventListener("touchmove", window._fsBlockScroll, { passive: false });
 
-  // Measure toolbar and position textarea below it
+  // Measure toolbar and track visualViewport to keep overlay in view
   window._fsLayout = function() {
     var ov = document.getElementById("fsOverlay");
     if (!ov) return;
@@ -245,6 +245,11 @@ function toggleFullscreen() {
     var pv = document.getElementById("fsPreview");
     if (ta) ta.style.top = th + "px";
     if (pv) pv.style.top = th + "px";
+    var vv = window.visualViewport;
+    if (vv) {
+      ov.style.top = vv.offsetTop + "px";
+      ov.style.height = vv.height + "px";
+    }
   };
   if (window.visualViewport) {
     window.visualViewport.addEventListener("resize", window._fsLayout);
