@@ -208,10 +208,31 @@ function toggleFullscreen() {
     existing.remove();
     document.body.style.overflow = "";
     document.removeEventListener("keydown", window._fsKey);
+    if (window.visualViewport) {
+      window.visualViewport.removeEventListener("resize", window._fsResize);
+      window.visualViewport.removeEventListener("scroll", window._fsResize);
+    }
     return;
   }
 
   document.body.style.overflow = "hidden";
+
+  // Use visualViewport to keep toolbar visible when keyboard opens
+  window._fsResize = function() {
+    var ov = document.getElementById("fsOverlay");
+    if (!ov) return;
+    var vv = window.visualViewport;
+    if (vv) {
+      ov.style.height = vv.height + "px";
+      ov.style.top = vv.offsetTop + "px";
+    }
+  };
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", window._fsResize);
+    window.visualViewport.addEventListener("scroll", window._fsResize);
+  }
+  window._fsResize();
+
   var ta = document.getElementById("content");
   var md = ta.value;
 
@@ -297,6 +318,11 @@ publish = function() {
     document.getElementById("content").value = document.getElementById("fsTextarea").value;
     fs.remove();
     document.body.style.overflow = "";
+    document.removeEventListener("keydown", window._fsKey);
+    if (window.visualViewport) {
+      window.visualViewport.removeEventListener("resize", window._fsResize);
+      window.visualViewport.removeEventListener("scroll", window._fsResize);
+    }
   }
   origPublish();
 };
