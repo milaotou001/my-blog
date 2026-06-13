@@ -252,10 +252,16 @@ function toggleFullscreen() {
   overlay.id = "fsOverlay";
   overlay.className = "fs-overlay";
 
-  // top bar: toolbar + edit/preview tabs + close
+  // top bar: tabs + close on one row, format buttons below
   var top = document.createElement("div");
   top.className = "fs-toolbar";
-  top.innerHTML = '<button onclick="fsWrap(\'**\',\'**\',\'加粗\')">B</button>'
+  top.innerHTML = '<span style="display:flex;align-items:center;gap:6px;margin-right:auto;">'
+    + '<button class="fs-tab on" id="fsTabEdit" onclick="fsSwitch(\'edit\')">编辑</button>'
+    + '<button class="fs-tab" id="fsTabPreview" onclick="fsSwitch(\'preview\')">预览</button>'
+    + '</span>'
+    + '<button class="fs-close" onclick="toggleFullscreen()">关闭</button>'
+    + '<span style="flex-basis:100%;height:4px;"></span>'
+    + '<button onclick="fsWrap(\'**\',\'**\',\'加粗\')">B</button>'
     + '<button onclick="fsWrap(\'*\',\'*\',\'斜体\')"><i>I</i></button>'
     + '<button onclick="fsWrap(\'## \',\'\',\'小标题\')">H2</button>'
     + '<button onclick="fsWrap(\'### \',\'\',\'更小标题\')">H3</button>'
@@ -264,10 +270,7 @@ function toggleFullscreen() {
     + '<button onclick="fsWrap(\'> \',\'\',\'引用\')">引用</button>'
     + '<button onclick="fsWrap(\'[\',\'](url)\',\'链接\')">链接</button>'
     + '<button onclick="fsWrap(\'`\',\'`\',\'代码\')">&lt;/&gt;</button>'
-    + '<button onclick="fsInsert(\'\\n---\\n\')">分割</button>'
-    + '<button class="fs-tab on" id="fsTabEdit" onclick="fsSwitch(\'edit\')">编辑</button>'
-    + '<button class="fs-tab" id="fsTabPreview" onclick="fsSwitch(\'preview\')">预览</button>'
-    + '<button class="fs-close" onclick="toggleFullscreen()">关闭</button>';
+    + '<button onclick="fsInsert(\'\\n---\\n\')">分割</button>';
 
   // editor textarea
   var ta2 = document.createElement("textarea");
