@@ -89,7 +89,7 @@ export default async function handler(req, res) {
       });
       const data = await r.json();
       if (!r.ok) return res.status(r.status).json({ error: data.message });
-      return res.json({ ok: true });
+      return res.json({ ok: true, sha: data.content.sha });
     }
 
     // --- Publish new post ---
