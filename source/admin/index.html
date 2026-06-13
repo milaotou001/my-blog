@@ -82,10 +82,10 @@
   <input id="category" placeholder="如：技术、随笔">
 
   <label>标签</label>
-  <div class="tag-row">
-    <input id="tagInput" placeholder="输入标签后点添加">
-    <button onclick="addTag()">添加</button>
-  </div>
+  <form class="tag-row" onsubmit="addTag();return false">
+    <input id="tagInput" placeholder="输入标签，点添加或按回车">
+    <button type="submit">添加</button>
+  </form>
   <div id="tags" class="tags"></div>
 
   <label>正文 <span class="hint">（Markdown 格式）</span></label>
