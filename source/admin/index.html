@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>博客管理后台</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .loading { display: flex; align-items: center; justify-content: center; height: 100vh; color: #666; font-size: 18px; }
+  </style>
+</head>
+<body>
+  <div class="loading">加载编辑器...</div>
+  <script src="https://unpkg.com/decap-cms@3.3.0/dist/decap-cms.js"></script>
+  <script>
+    CMS.init({ config: {
+      backend: {
+        name: "github",
+        repo: "milaotou001/my-blog",
+        branch: "master",
+        base_url: "/api/auth",
+        auth_endpoint: "/auth",
+        squash_merges: true
+      },
+      media_folder: "source/images",
+      public_folder: "/images",
+      locale: "zh_Hans",
+      slug: { encoding: "ascii", clean_accents: true, sanitize_replacement: "-" },
+      collections: [{
+        name: "posts",
+        label: "文章",
+        label_singular: "文章",
+        folder: "source/_posts",
+        create: true,
+        slug: "{{year}}-{{month}}-{{day}}-{{slug}}",
+        editor: { preview: false },
+        fields: [
+          { label: "标题", name: "title", widget: "string" },
+          { label: "日期", name: "date", widget: "datetime", format: "YYYY-MM-DD", date_format: "YYYY-MM-DD", time_format: false },
+          { label: "分类", name: "categories", widget: "string", required: false },
+          { label: "标签", name: "tags", widget: "list", required: false },
+          { label: "摘要", name: "description", widget: "text", required: false },
+          { label: "正文", name: "body", widget: "markdown" }
+        ]
+      }]
+    }});
+  </script>
+</body>
+</html>
