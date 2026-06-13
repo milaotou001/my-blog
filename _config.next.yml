@@ -68,7 +68,7 @@ site_state: true
 
 # Social Links
 social:
-  GitHub: https://github.com/ || fab fa-github
+  GitHub: https://github.com/milaotou001 || fab fa-github
   RSS: /atom.xml || fa fa-rss
 
 social_icons:

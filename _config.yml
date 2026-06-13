@@ -7,12 +7,12 @@ title: 我的博客
 subtitle: ''
 description: ''
 keywords:
-author: 博主
+author: 娄仲达
 language: zh-CN
 timezone: 'Asia/Shanghai'
 
 # URL
-url: https://example.com
+url: https://my-blog-two-phi-55.vercel.app/
 permalink: :year/:month/:day/:title/
 permalink_defaults:
 pretty_urls:
