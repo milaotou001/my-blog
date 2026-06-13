@@ -140,7 +140,7 @@ function loadList() {
     }
     el.innerHTML = r.data.map(function(p) {
       return '<div class="post-item">'
-        + '<span class="name">' + esc(p.name.replace(/\.md$/, "")) + '</span>'
+        + '<span class="name">' + esc(p.title || p.name) + '</span>'
         + '<button onclick="editPost(\'' + esc(p.name) + '\')">编辑</button>'
         + '</div>';
     }).join("");

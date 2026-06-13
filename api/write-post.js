@@ -38,14 +38,25 @@ export default async function handler(req, res) {
       if (!Array.isArray(files)) {
         return res.status(r.status).json({ error: files.message || "获取列表失败" });
       }
-      const posts = files
+      const mdFiles = files
         .filter((f) => f.name.endsWith(".md"))
-        .map((f) => ({
-          name: f.name,
-          path: f.path,
-          sha: f.sha,
-        }))
         .sort((a, b) => b.name.localeCompare(a.name));
+
+      // Fetch each post's frontmatter title in parallel
+      const posts = await Promise.all(
+        mdFiles.map(async (f) => {
+          try {
+            const fr = await fetch(`${base}/${encodeURIComponent(f.name)}`, { headers });
+            const fd = await fr.json();
+            if (!fr.ok) return { name: f.name, path: f.path, sha: f.sha, title: f.name };
+            const raw = Buffer.from(fd.content, "base64").toString("utf-8");
+            const parsed = parseFrontmatter(raw);
+            return { name: f.name, path: f.path, sha: f.sha, title: parsed.title || f.name, date: parsed.date };
+          } catch {
+            return { name: f.name, path: f.path, sha: f.sha, title: f.name };
+          }
+        })
+      );
       return res.json(posts);
     }
 
