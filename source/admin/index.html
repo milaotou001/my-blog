@@ -61,7 +61,7 @@
   .preview a { color: #222; }
 
   /* Fullscreen editor */
-  .fs-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; background: #fff; display: flex; flex-direction: column; }
+  .fs-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; height: 100dvh; z-index: 9999; background: #fff; display: flex; flex-direction: column; overflow: hidden; }
   .fs-overlay .fs-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 8px 10px; border-bottom: 1px solid #eee; flex-shrink: 0; }
   .fs-overlay .fs-toolbar button { padding: 8px 14px; font-size: 14px; background: #fff; color: #333; border: 1px solid #ddd; border-radius: 6px; white-space: nowrap; }
   .fs-overlay .fs-toolbar .fs-close { margin-left: auto; background: #222; color: #fff; border: none; padding: 8px 16px; }
@@ -206,10 +206,12 @@ function toggleFullscreen() {
   var existing = document.getElementById("fsOverlay");
   if (existing) {
     existing.remove();
+    document.body.style.overflow = "";
     document.removeEventListener("keydown", window._fsKey);
     return;
   }
 
+  document.body.style.overflow = "hidden";
   var ta = document.getElementById("content");
   var md = ta.value;
 
@@ -293,6 +295,8 @@ publish = function() {
   var fs = document.getElementById("fsOverlay");
   if (fs) {
     document.getElementById("content").value = document.getElementById("fsTextarea").value;
+    fs.remove();
+    document.body.style.overflow = "";
   }
   origPublish();
 };
