@@ -1,49 +1,181 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>博客管理后台</title>
-  <style>
-    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    .loading { display: flex; align-items: center; justify-content: center; height: 100vh; color: #666; font-size: 18px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>写文章</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; color: #333; padding: 16px; }
+  h1 { font-size: 20px; margin-bottom: 16px; text-align: center; }
+  label { display: block; font-size: 13px; color: #666; margin-bottom: 4px; margin-top: 12px; }
+  input, textarea, select { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; font-family: inherit; background: #fff; }
+  textarea { min-height: 300px; line-height: 1.6; resize: vertical; }
+  button { width: 100%; padding: 14px; background: #222; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; margin-top: 16px; cursor: pointer; }
+  button:active { background: #000; }
+  button:disabled { background: #999; }
+  .msg { text-align: center; padding: 8px; margin-top: 8px; border-radius: 8px; font-size: 14px; display: none; }
+  .msg.success { display: block; background: #e8f5e9; color: #2e7d32; }
+  .msg.error { display: block; background: #ffebee; color: #c62828; }
+  .hint { font-size: 12px; color: #999; margin-top: 2px; }
+  .tag-row { display: flex; gap: 8px; margin-top: 4px; }
+  .tag-row input { flex: 1; }
+  .tag-row button { width: auto; padding: 10px 16px; margin: 0; font-size: 14px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .tag { background: #e0e0e0; padding: 4px 10px; border-radius: 12px; font-size: 13px; display: flex; align-items: center; gap: 4px; }
+  .tag .del { cursor: pointer; font-weight: bold; color: #999; }
+  #login, #editor { display: none; }
+  #login.active, #editor.active { display: block; }
+  .back-link { text-align: center; margin-top: 12px; }
+  .back-link a { color: #999; font-size: 13px; }
+</style>
 </head>
 <body>
-  <div class="loading">加载编辑器...</div>
-  <script src="https://cdn.jsdelivr.net/npm/decap-cms@3/dist/decap-cms.js"></script>
-  <script>
-    CMS.init({ config: {
-      backend: {
-        name: "github",
-        repo: "milaotou001/my-blog",
-        branch: "master",
-        base_url: "/api/auth",
-        auth_endpoint: "/auth",
-        squash_merges: true
-      },
-      media_folder: "source/images",
-      public_folder: "/images",
-      locale: "zh_Hans",
-      slug: { encoding: "ascii", clean_accents: true, sanitize_replacement: "-" },
-      collections: [{
-        name: "posts",
-        label: "文章",
-        label_singular: "文章",
-        folder: "source/_posts",
-        create: true,
-        slug: "{{year}}-{{month}}-{{day}}-{{slug}}",
-        editor: { preview: false },
-        fields: [
-          { label: "标题", name: "title", widget: "string" },
-          { label: "日期", name: "date", widget: "datetime", format: "YYYY-MM-DD", date_format: "YYYY-MM-DD", time_format: false },
-          { label: "分类", name: "categories", widget: "string", required: false },
-          { label: "标签", name: "tags", widget: "list", required: false },
-          { label: "摘要", name: "description", widget: "text", required: false },
-          { label: "正文", name: "body", widget: "markdown" }
-        ]
-      }]
-    }});
-  </script>
+
+<div id="login" class="active">
+  <h1>登录编辑器</h1>
+  <label>密码</label>
+  <input id="pwd" type="password" placeholder="输入密码">
+  <button onclick="login()">登录</button>
+  <div id="loginMsg" class="msg"></div>
+</div>
+
+<div id="editor">
+  <h1>写文章</h1>
+  <label>标题</label>
+  <input id="title" placeholder="文章标题">
+
+  <label>日期</label>
+  <input id="date" type="date">
+
+  <label>分类</label>
+  <input id="category" placeholder="如：技术、随笔">
+
+  <label>标签</label>
+  <div class="tag-row">
+    <input id="tagInput" placeholder="输入标签后点添加">
+    <button onclick="addTag()">添加</button>
+  </div>
+  <div id="tags" class="tags"></div>
+
+  <label>正文 <span class="hint">（Markdown 格式）</span></label>
+  <textarea id="content" placeholder="在这里写正文..."></textarea>
+
+  <button id="publishBtn" onclick="publish()">发布</button>
+  <div id="msg" class="msg"></div>
+
+  <div class="back-link"><a href="/">← 返回博客</a></div>
+</div>
+
+<script>
+var tags = [];
+var token = "";
+
+document.getElementById("date").value = new Date().toISOString().split("T")[0];
+
+function login() {
+  var pwd = document.getElementById("pwd").value;
+  if (!pwd) return;
+  token = btoa("admin:" + pwd);
+  document.getElementById("loginMsg").className = "msg";
+  document.getElementById("loginMsg").textContent = "验证中...";
+  document.getElementById("loginMsg").style.display = "block";
+
+  fetch("/api/write-post", { method: "POST", headers: { "Authorization": "Basic " + token, "Content-Type": "application/json" }, body: JSON.stringify({ action: "check" }) })
+    .then(function(r) {
+      if (r.ok) {
+        document.getElementById("login").classList.remove("active");
+        document.getElementById("editor").classList.add("active");
+        localStorage.setItem("blog_token", token);
+      } else {
+        document.getElementById("loginMsg").textContent = "密码错误";
+        document.getElementById("loginMsg").className = "msg error";
+      }
+    })
+    .catch(function() {
+      document.getElementById("loginMsg").textContent = "网络错误，请重试";
+      document.getElementById("loginMsg").className = "msg error";
+    });
+}
+
+function addTag() {
+  var input = document.getElementById("tagInput");
+  var val = input.value.trim();
+  if (val && tags.indexOf(val) === -1) { tags.push(val); renderTags(); }
+  input.value = "";
+}
+
+function removeTag(i) { tags.splice(i, 1); renderTags(); }
+
+function renderTags() {
+  document.getElementById("tags").innerHTML = tags.map(function(t, i) {
+    return '<span class="tag">' + t + '<span class="del" onclick="removeTag(' + i + ')">&times;</span></span>';
+  }).join("");
+}
+
+function publish() {
+  var btn = document.getElementById("publishBtn");
+  var msg = document.getElementById("msg");
+  var title = document.getElementById("title").value.trim();
+  var date = document.getElementById("date").value;
+  var category = document.getElementById("category").value.trim();
+  var content = document.getElementById("content").value.trim();
+
+  if (!title) { showMsg("请填写标题", "error"); return; }
+  if (!content) { showMsg("请填写正文", "error"); return; }
+
+  btn.disabled = true;
+  btn.textContent = "发布中...";
+  msg.className = "msg";
+
+  var tok = token || localStorage.getItem("blog_token") || "";
+
+  fetch("/api/write-post", {
+    method: "POST",
+    headers: { "Authorization": "Basic " + tok, "Content-Type": "application/json" },
+    body: JSON.stringify({ title: title, date: date, categories: category, tags: tags, content: content })
+  })
+  .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+  .then(function(result) {
+    btn.disabled = false;
+    btn.textContent = "发布";
+    if (result.ok) {
+      showMsg("发布成功！稍后刷新博客即可看到新文章。", "success");
+      document.getElementById("title").value = "";
+      document.getElementById("content").value = "";
+      tags = [];
+      renderTags();
+    } else {
+      showMsg(result.data.error || "发布失败", "error");
+    }
+  })
+  .catch(function() {
+    btn.disabled = false;
+    btn.textContent = "发布";
+    showMsg("网络错误，请重试", "error");
+  });
+}
+
+function showMsg(text, type) {
+  var msg = document.getElementById("msg");
+  msg.textContent = text;
+  msg.className = "msg " + type;
+}
+
+// Auto login if token cached
+(function() {
+  var saved = localStorage.getItem("blog_token");
+  if (saved) {
+    token = saved;
+    fetch("/api/write-post", { method: "POST", headers: { "Authorization": "Basic " + saved, "Content-Type": "application/json" }, body: JSON.stringify({ action: "check" }) })
+      .then(function(r) {
+        if (r.ok) {
+          document.getElementById("login").classList.remove("active");
+          document.getElementById("editor").classList.add("active");
+        }
+      });
+  }
+})();
+</script>
 </body>
 </html>
