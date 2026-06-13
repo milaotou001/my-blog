@@ -86,19 +86,33 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "标题和正文不能为空" });
       }
       const md = buildMarkdown(body);
-      const r = await fetch(`${base}/${encodeURIComponent(body.name)}`, {
-        method: "PUT",
-        headers,
-        body: JSON.stringify({
-          message: `Update: ${body.title}`,
-          content: Buffer.from(md, "utf-8").toString("base64"),
-          sha: body.sha,
-          branch: "master",
-        }),
-      });
-      const data = await r.json();
-      if (!r.ok) return res.status(r.status).json({ error: data.message });
-      return res.json({ ok: true, sha: data.content.sha });
+
+      async function tryUpdate(sha) {
+        const r = await fetch(`${base}/${encodeURIComponent(body.name)}`, {
+          method: "PUT",
+          headers,
+          body: JSON.stringify({
+            message: `Update: ${body.title}`,
+            content: Buffer.from(md, "utf-8").toString("base64"),
+            sha,
+            branch: "master",
+          }),
+        });
+        return { ok: r.ok, status: r.status, data: await r.json() };
+      }
+
+      let result = await tryUpdate(body.sha);
+      // If SHA is stale, fetch the latest and retry once
+      if (!result.ok && result.data.message && /does not match/i.test(result.data.message)) {
+        const latest = await fetch(`${base}/${encodeURIComponent(body.name)}`, { headers });
+        const latestData = await latest.json();
+        if (latest.ok && latestData.sha) {
+          result = await tryUpdate(latestData.sha);
+        }
+      }
+
+      if (!result.ok) return res.status(result.status).json({ error: result.data.message });
+      return res.json({ ok: true, sha: result.data.content.sha });
     }
 
     // --- Publish new post ---
